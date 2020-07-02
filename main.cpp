@@ -17,10 +17,11 @@ int main(int argc, char *argv[])
     do{
         std::cout<<"Enter organized pcd file name(.pcd):";
         std::string fileName;
-        std::cin>>fileName;
+        std::getline(std::cin, fileName);
         filePath = QString::fromStdString(fileName);
-        fileExists = (QFileInfo::exists(filePath) && QFileInfo(filePath).isFile())? true: false;   //確認file是否存在
-        isPCDfile = (QFileInfo(filePath).suffix() == "pcd")? true :false;   //確認file是否為csv
+        QFileInfo fileInfo(filePath);
+        fileExists = (fileInfo.exists() && fileInfo.isFile())? true: false;   //確認file是否存在
+        isPCDfile = (fileInfo.suffix() == "pcd")? true :false;   //確認file是否為pcd
     }while(!fileExists || !isPCDfile);
 
     pcl::PointCloud<PointT>::Ptr cloud (new pcl::PointCloud<PointT>);
