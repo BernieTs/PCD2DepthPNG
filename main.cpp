@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 #include <QDebug>
+#include <QFileInfo>
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
@@ -10,14 +11,35 @@ void saveDepthToPNG (const std::string &file_name, const pcl::PointCloud<PointT>
 
 int main(int argc, char *argv[])
 {
-    std::string pcd_file("test_pcd_20200701.pcd");
+    bool fileExists;
+    bool isPCDfile;
+    QString filePath;
+    do{
+        std::cout<<"Enter organized pcd file name(.pcd):";
+        std::string fileName;
+        std::cin>>fileName;
+        filePath = QString::fromStdString(fileName);
+        fileExists = (QFileInfo::exists(filePath) && QFileInfo(filePath).isFile())? true: false;   //確認file是否存在
+        isPCDfile = (QFileInfo(filePath).suffix() == "pcd")? true :false;   //確認file是否為csv
+    }while(!fileExists || !isPCDfile);
 
     pcl::PointCloud<PointT>::Ptr cloud (new pcl::PointCloud<PointT>);
-    pcl::io::loadPCDFile(pcd_file, *cloud);
+    if(pcl::io::loadPCDFile(filePath.toStdString(), *cloud) == -1)
+    {
+        PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
+        system("PAUSE");
+        return -1;
+    }
+    if(!cloud->isOrganized())
+    {
+        PCL_ERROR ("cloud is not organized \n");
+        system("PAUSE");
+        return -1;
+    }
 
     // save depth image
-    std::string depth_file("test_pcd_20200701.png");
-    saveDepthToPNG(depth_file, *cloud);
+    QString qOutputFileName = QFileInfo(filePath).baseName() + ".png";
+    saveDepthToPNG(qOutputFileName.toStdString(), *cloud);
 
     system("PAUSE");
     return 0;
@@ -77,9 +99,10 @@ void saveDepthToPNG (const std::string &file_name, const pcl::PointCloud<PointT>
         depth.points[i].rgba = (((int)t << 16) | ((int)t << 8) | (int)t);
     }
 
-
     pcl::io::savePNGFile(file_name, depth);
 
     // Save cloud data
     //pcl::io::savePCDFileASCII ("depth.pcd", depth);
+
+    std::cout<<"Saved cloud depth data to "<<file_name<<std::endl;
 }
